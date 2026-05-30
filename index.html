@@ -28,16 +28,18 @@
 <body>
 
 <div class="container">
-    <h2>🎙️ Автоматичний Голосовий Журнал</h2>
+    <h2>🎙️ Розумний Голосовий Журнал</h2>
     
     <div class="hint">
-        <strong>🔔 Інструкція авторежиму:</strong> Натисніть кнопку. Дочекайтеся, поки вона стане <span style="color:#dc3545; font-weight:bold;">Червоною і запульсує</span> — лише тоді диктуйте. Коли система говорить або зберігає дані, кнопка стає <span style="color:#6c757d; font-weight:bold;">Сірою</span> (у цей момент вона вас не чує).
+        <strong>Формула вимови:</strong> [Прізвище чи Ім'я] + [слово "група" та номер] + [оцінка].<br>
+        <i>Наприклад: "Войтех Богдан група 1 десять" або "Левченко група 2 дванадцять"</i>
     </div>
     
     <div class="settings-section">
         <div class="form-group">
             <label for="class-select">Оберіть клас:</label>
             <select id="class-select" class="form-input">
+                <option value="5-Б">5-Б клас</option>
                 <option value="6-А">6-A клас</option>
                 <option value="6-Б">6-Б клас</option>
                 <option value="6-В">6-В клас</option>
@@ -58,7 +60,8 @@
 </div>
 
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby8giywMjAvmIdzfkoFxjgk3VnFLkfl4mBGjck8dW9-nq1ZXOiG4Dob4oZ6bXYjAM36gg/exec"; 
+    // Оновлене актуальне посилання на ваш Google Скрипт
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby461zJzSAe5U9ZwdaNxDZ4O4VyNk4XFm6aX_eHB4B8ba4HLxPH5V-hn2d1VgOV7_HypA/exec"; 
     const SECRET_TOKEN = "Вчитель2026_СекретнийПароль!#"; 
 
     const startBtn = document.getElementById('start-btn');
@@ -99,10 +102,10 @@
             if (state === "listening") {
                 startBtn.className = "btn ready";
                 startBtn.innerText = "🔴 Мікрофон СЛУХАЄ...";
-                statusDiv.innerText = "Диктуйте учня (Прізвище -> Група -> Бал)...";
+                statusDiv.innerText = "Диктуйте учня...";
             } else if (state === "waiting") {
                 startBtn.className = "btn wait";
-                startBtn.innerText = "⏳ Обробка / Озвучування...";
+                startBtn.innerText = "⏳ Збереження та озвучка...";
             } else {
                 startBtn.className = "btn";
                 startBtn.innerText = "🎙️ Запустити авторежим";
@@ -115,50 +118,42 @@
                 try { 
                     recognition.start(); 
                     setVisualState("listening");
-                } catch(e) { /* Вже працює */ }
+                } catch(e) {}
             }
         }
 
         recognition.onend = () => {
             if (isActive && !isSpeaking) {
-                // ⏳ Даємо 800мс паузи, щоб очистити аудіо-буфер перед новим стартом
-                setTimeout(safeStart, 800); 
+                setTimeout(safeStart, 600); 
             }
         };
 
+        function normalizeGroup(g) {
+            g = g.toLowerCase();
+            if (g.includes("1") || g.includes("один") || g.includes("перш")) return "1";
+            if (g.includes("2") || g.includes("два") || g.includes("друг")) return "2";
+            if (g.includes("3") || g.includes("три") || g.includes("трет")) return "3";
+            if (g.includes("4") || g.includes("чотир") || g.includes("четверт")) return "4";
+            return g;
+        }
+
         recognition.onresult = (event) => {
             const text = event.results[0][0].transcript;
-            resultDiv.innerText = `Почуто: "${text}"`;
             
-            const parts = text.split(/[\s,]+/); 
-            
-            if (parts.length >= 3) {
-                const surname = parts[0];
-                const grade = parts[parts.length - 1];
-                const group = parts.slice(1, parts.length - 1).join(" ");
-                
-                const groupStr = group.toLowerCase();
-                let grValid = false;
-                if (groupStr.includes("1") || groupStr.includes("один") || groupStr.includes("перш") ||
-                    groupStr.includes("2") || groupStr.includes("два") || groupStr.includes("друг") ||
-                    groupStr.includes("3") || groupStr.includes("три") || groupStr.includes("трет") ||
-                    groupStr.includes("4") || groupStr.includes("чотир") || groupStr.includes("четверт")) {
-                    grValid = true;
-                }
+            // Запобігаємо зливанню цифр дефісом ("1-10" -> "1 10")
+            let cleanText = text.replace(/(\d+)\s*[-–—]\s*(\d+)/g, '$1 $2');
+            resultDiv.innerText = `Почуто: "${cleanText}"`;
 
-                if (!grValid) {
-                    statusDiv.classList.add('error-text');
-                    statusDiv.innerText = "Помилка: Не розпізнано ГР.";
-                    
-                    isSpeaking = true;
-                    setVisualState("waiting");
-                    recognition.stop();
-                    speak("Не розпізнано групу.", () => {
-                        isSpeaking = false;
-                        setTimeout(safeStart, 1000); // Велика пауза після помилки
-                    });
-                    return; 
-                }
+            // Розбір фрази за ключовим словом "група/гр"
+            const groupRegex = /(.*?)\s+(група|гр|груп[аи])\s+(\d+|один|два|три|чотири|перш[аі]|друг[аі]|трет[яі]|четверт[аі])\s+(.*)/i;
+            const match = cleanText.match(groupRegex);
+
+            if (match) {
+                const surname = match[1].trim();       
+                const rawGroup = match[3].trim();      
+                const grade = match[4].trim();         
+                
+                const group = normalizeGroup(rawGroup); 
 
                 const selectedDate = dateInput.value;
                 const selectedClass = classSelect.value;
@@ -170,28 +165,25 @@
                 sendToGoogleSheet(surname, group, grade, selectedDate, selectedClass);
             } else {
                 statusDiv.classList.add('error-text');
-                statusDiv.innerText = "Мало даних для розпізнання.";
+                statusDiv.innerText = "Помилка структури. Повторіть чітко за формулою.";
                 
                 isSpeaking = true;
                 setVisualState("waiting");
                 recognition.stop();
                 speak("Повторіть фразу.", () => {
                     isSpeaking = false;
-                    setTimeout(safeStart, 1000);
+                    setTimeout(safeStart, 800);
                 });
             }
         };
 
         recognition.onerror = (e) => {
-            if (e.error === 'no-speech') {
-                // Якщо просто мовчали - м'яко перезапускаємо без зміни дизайну
-                safeStart();
-            }
+            if (e.error === 'no-speech') safeStart();
         };
     }
 
     function sendToGoogleSheet(surname, group, grade, date, className) {
-        statusDiv.innerText = `Надсилаю [${surname}]...`;
+        statusDiv.innerText = `Шукаю ${surname} в журналі...`;
         
         fetch(WEB_APP_URL, {
             method: "POST",
@@ -202,16 +194,16 @@
         .then(() => {
             statusDiv.classList.remove('error-text');
             statusDiv.innerText = `Успішно внесено!`;
-            resultDiv.innerText = `[${className}] ${surname} ➔ Оцінка: ${grade}`;
+            resultDiv.innerText = `[${className}] ${surname} ➔ Гр. ${group} ➔ Оцінка: ${grade}`;
             
             speak(`${surname} записано.`, () => {
                 isSpeaking = false;
-                setTimeout(safeStart, 1000); // 🌟 Фіксована безпечна пауза 1 секунда перед наступним учнем!
+                setTimeout(safeStart, 1000); 
             });
         })
         .catch(error => {
             statusDiv.classList.add('error-text');
-            statusDiv.innerText = "Помилка мережі.";
+            statusDiv.innerText = "Помилка зв'язку з таблицею.";
             speak("Помилка зв'язку.", () => {
                 isSpeaking = false;
                 setTimeout(safeStart, 1000);
@@ -224,9 +216,7 @@
             window.speechSynthesis.cancel(); 
             const utterance = new SpeechSynthesisUtterance(message);
             utterance.lang = 'uk-UA';
-            if (callback) {
-                utterance.onend = callback; 
-            }
+            if (callback) utterance.onend = callback; 
             window.speechSynthesis.speak(utterance);
         } else if (callback) {
             callback();
