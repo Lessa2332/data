@@ -76,11 +76,13 @@
     dateInput.value = new Date().toISOString().split('T')[0];
 
     let isListening = false;
+    let isProcessing = false; // Новий прапорець захисту
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = 'uk-UA';
 
     startBtn.addEventListener('click', () => {
+        if (isProcessing) return; // Ігноруємо натискання, якщо дані відправляються
         if (isListening) {
             recognition.stop();
         } else {
@@ -97,17 +99,34 @@
     recognition.onend = () => {
         isListening = false;
         startBtn.className = "btn-mic";
+        if (!isProcessing) statusDiv.innerText = "Очікування...";
     };
 
     recognition.onresult = (e) => {
+        if (isProcessing) return;
+        isProcessing = true; // Блокуємо відправку нових запитів
+        
         const text = e.results[0][0].transcript;
-        statusDiv.innerText = "Аналіз...";
+        statusDiv.innerText = "Аналіз та запис...";
+        
         fetch(WEB_APP_URL, {
             method: "POST",
-            body: JSON.stringify({ rawText: text, date: dateInput.value, className: classSelect.value, token: SECRET_TOKEN })
+            body: JSON.stringify({ 
+                rawText: text, 
+                date: dateInput.value, 
+                className: classSelect.value, 
+                token: SECRET_TOKEN 
+            })
         })
         .then(r => r.text())
-        .then(res => { statusDiv.innerText = res; });
+        .then(res => { 
+            statusDiv.innerText = res; 
+            isProcessing = false; // Розблоковуємо після успіху
+        })
+        .catch(err => {
+            statusDiv.innerText = "Помилка зв'язку";
+            isProcessing = false;
+        });
     };
 </script>
 </body>
