@@ -3,251 +3,382 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Голосовий журнал GeoTrack</title>
+    <title>Голосовий журнал</title>
     <style>
         :root {
             --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
             --card-bg: #ffffff;
             --primary: #4f46e5;
+            --primary-hover: #4338ca;
             --danger: #ef4444;
             --text-main: #1f2937;
             --text-muted: #6b7280;
             --radius: 16px;
-            --success: #22c55e;
         }
-        * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-gradient); color: var(--text-main); margin: 0; padding: 16px; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .app-card { width: 100%; max-width: 460px; background: var(--card-bg); padding: 24px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
-        h2 { font-size: 22px; font-weight: 800; margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px; }
-        .subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; }
-        .hint { background: #f0fdf4; color: #166534; padding: 14px; border-radius: var(--radius); margin-bottom: 20px; font-size: 14px; border-left: 4px solid var(--success); }
-        .hint strong { color: #0a3d1f; }
-        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-        .form-group { display: flex; flex-direction: column; gap: 4px; }
-        .form-group label { font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted); }
-        .form-input { width: 100%; height: 48px; padding: 0 12px; font-size: 15px; border-radius: var(--radius); border: 1.5px solid #e5e7eb; background: #f9fafb; transition: border 0.2s; }
-        .form-input:focus { outline: none; border-color: var(--primary); background: #fff; }
-        .mic-wrapper { position: relative; margin: 14px auto 10px; width: 110px; height: 110px; }
-        .btn-mic { width: 100%; height: 100%; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 50%; font-size: 38px; transition: all 0.25s; box-shadow: 0 8px 24px rgba(79,70,229,0.3); display: flex; align-items: center; justify-content: center; }
-        .btn-mic:active { transform: scale(0.92); }
-        .btn-mic.ready { background: var(--danger); box-shadow: 0 8px 28px rgba(239,68,68,0.45); animation: pulse 1.2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
-        #status { font-size: 14px; font-weight: 600; text-align: center; min-height: 22px; padding: 6px 0; color: var(--text-muted); word-break: break-word; }
-        #status.success { color: #166534; }
-        #status.error { color: #b91c1c; }
-        .log-area { margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: var(--radius); font-size: 13px; max-height: 100px; overflow-y: auto; border: 1px solid #eef2f6; color: var(--text-muted); }
-        .log-area .entry { padding: 4px 0; border-bottom: 1px solid #eef2f6; }
-        .log-area .entry:last-child { border-bottom: none; }
-        .footer-note { margin-top: 16px; text-align: center; font-size: 11px; color: var(--text-muted); }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: var(--bg-gradient); 
+            color: var(--text-main); 
+            margin: 0;
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-card { 
+            width: 100%;
+            max-width: 440px; 
+            background: var(--card-bg); 
+            padding: 24px; 
+            border-radius: 24px; 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06); 
+            box-sizing: border-box;
+        }
+
+        h2 { 
+            font-size: 22px; 
+            font-weight: 800;
+            color: #111827; 
+            margin: 0 0 6px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .hint { 
+            background: #f0fdf4; 
+            color: #166534; 
+            padding: 14px 16px; 
+            border-radius: var(--radius); 
+            margin-bottom: 20px; 
+            font-size: 14px; 
+            text-align: left; 
+            line-height: 1.45;
+            border-left: 4px solid #22c55e;
+        }
+        
+        .hint strong { color: #14532d; }
+
+        .controls-grid { 
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .form-group { 
+            text-align: left; 
+        }
+
+        .form-group label { 
+            font-weight: 700; 
+            display: block; 
+            margin-bottom: 6px; 
+            color: var(--text-main); 
+            font-size: 12px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        }
+
+        .form-input { 
+            width: 100%; 
+            height: 48px;
+            padding: 0 12px; 
+            font-size: 16px; 
+            border-radius: var(--radius); 
+            border: 1.5px solid #e5e7eb; 
+            box-sizing: border-box; 
+            background: #f9fafb; 
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            -webkit-appearance: none; 
+        }
+
+        .form-input:focus { 
+            border-color: var(--primary); 
+            background: #ffffff;
+            outline: none; 
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        .mic-button-wrapper {
+            position: relative;
+            margin: 30px auto;
+            width: 120px;
+            height: 120px;
+        }
+
+        .btn-mic { 
+            width: 100%;
+            height: 100%;
+            cursor: pointer; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 50%; 
+            font-size: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn-mic.ready { 
+            background: var(--danger); 
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+        }
+
+        .pulse-ring {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.4);
+            z-index: 1;
+            opacity: 0;
+            transform: scale(1);
+        }
+
+        .btn-mic.ready + .pulse-ring {
+            animation: modernPulse 1.8s infinite cubic-bezier(0.25, 0, 0, 1);
+        }
+
+        .btn-mic.wait { 
+            background: #9ca3af; 
+            cursor: not-allowed; 
+            box-shadow: none;
+            animation: rotateWait 2s infinite linear;
+        }
+
+        #status { 
+            font-size: 15px; 
+            color: var(--text-muted); 
+            font-weight: 600; 
+            margin-bottom: 16px;
+            min-height: 22px;
+        }
+
+        #result { 
+            font-size: 15px; 
+            color: var(--text-main); 
+            background: #f3f4f6; 
+            padding: 14px; 
+            border-radius: var(--radius); 
+            text-align: center; 
+            word-wrap: break-word;
+            border: 1px dashed #e5e7eb;
+            min-height: 24px;
+        }
+
+        .error-text { color: var(--danger) !important; }
+        .success-text { color: #166534 !important; }
+        
+        @keyframes modernPulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { opacity: 0.4; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        @keyframes rotateWait {
+            0% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(0.9); opacity: 0.6; }
+            100% { transform: scale(1); opacity: 0.9; }
+        }
     </style>
 </head>
 <body>
+
 <div class="app-card">
-    <h2>🎙️ Голосовий журнал</h2>
-    <div class="subtitle">GeoTrack · запис оцінок через голос</div>
+    <h2>🎙️ Голосовий Журнал</h2>
+    <div class="subtitle">Інтелектуальна система оцінювання</div>
+    
     <div class="hint">
-        <strong>Формат:</strong> <i>Прізвище, група, тема, оцінка.</i><br>
-        📌 <i>«Петренко, друга група, Африка географічне положення, 11 балів»</i>
+        🚀 <strong>Природна мова:</strong> Натисніть круглу кнопку та диктуйте. <br><i>"Бохонок перша група 11 балів."</i>
     </div>
+    
     <div class="controls-grid">
         <div class="form-group">
             <label for="class-select">Клас</label>
             <select id="class-select" class="form-input">
-                <optgroup label="5-ті класи">
-                    <option value="5-А">5-А</option><option value="5-Б">5-Б</option>
-                    <option value="5-В">5-В</option><option value="5-Г">5-Г</option>
-                    <option value="5-Д">5-Д</option>
-                </optgroup>
-                <optgroup label="7-мі класи">
-                    <option value="7-А" selected>7-А</option><option value="7-Б">7-Б</option>
-                    <option value="7-В">7-В</option><option value="7-Г">7-Г</option>
-                    <option value="7-Д">7-Д</option>
-                </optgroup>
+                <option value="6-а">6-А клас</option>
+                <option value="6-б">6-Б клас</option>
+                <option value="6-в">6-В клас</option>
+                <option value="6-г">6-Г клас</option>
+                <option value="6-д">6-Д клас</option>
             </select>
         </div>
+        
         <div class="form-group">
-            <label for="lesson-date">Дата (необов'язково)</label>
+            <label for="lesson-date">Дата</label>
             <input type="date" id="lesson-date" class="form-input">
         </div>
     </div>
-    <div class="mic-wrapper">
+    
+    <div class="mic-button-wrapper">
         <button id="start-btn" class="btn-mic">🎙️</button>
+        <div class="pulse-ring"></div>
     </div>
-    <div id="status">Натисніть мікрофон, щоб почати</div>
-    <div class="log-area" id="logArea">
-        <div class="entry" style="color: #9ca3af;">Історія записів з'явиться тут…</div>
-    </div>
-    <div class="footer-note">Автор: Бохонок Олеся Олександрівна</div>
+    
+    <div id="status">Очікування запуску...</div>
+    <div id="result">Тут з'явиться почута фраза</div>
 </div>
 
 <script>
-    // ============================================================
-    // 1. НАЛАШТУВАННЯ
-    // ============================================================
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbycoySGnysClt4KMKrMtnSSpjdRtVvOGZYwK57UzSyraJtXKI6YT1shZPXiqHZzG7p5/exec";
     const SECRET_TOKEN = "Вчитель2026_СекретнийПароль!#";
 
-    // ============================================================
-    // 2. DOM-ЕЛЕМЕНТИ
-    // ============================================================
     const startBtn = document.getElementById('start-btn');
     const statusDiv = document.getElementById('status');
-    const classSelect = document.getElementById('class-select');
+    const resultDiv = document.getElementById('result');
     const dateInput = document.getElementById('lesson-date');
-    const logArea = document.getElementById('logArea');
+    const classSelect = document.getElementById('class-select');
 
     dateInput.value = new Date().toISOString().split('T')[0];
-    let isListening = false;
-    let isProcessing = false;
 
-    // ============================================================
-    // 3. ГОЛОСОВЕ РОЗПІЗНАВАННЯ
-    // ============================================================
+    let isActive = false;     
+    let isSpeaking = false;   
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
     if (!SpeechRecognition) {
-        statusDiv.innerText = '❌ Ваш браузер не підтримує голосове введення';
-        statusDiv.className = 'error';
+        statusDiv.innerText = "Браузер не підтримує розпізнавання мови.";
         startBtn.disabled = true;
-    }
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'uk-UA';
-    recognition.continuous = false;
-    recognition.interimResults = false;
+        startBtn.style.background = "#d1d5db";
+    } else {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'uk-UA';
+        recognition.interimResults = false;
 
-    // ============================================================
-    // 4. ОСНОВНА ЛОГІКА
-    // ============================================================
-    function getSheetName(className) {
-        return className.startsWith('5') ? 'Grade_5' : 'Grade_7';
-    }
-
-    function addLogEntry(text, isSuccess = true) {
-        const entry = document.createElement('div');
-        entry.className = 'entry';
-        entry.style.color = isSuccess ? '#166534' : '#b91c1c';
-        const time = new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-        entry.textContent = `${time} ${text}`;
-        logArea.prepend(entry);
-        if (logArea.children.length > 20) {
-            logArea.removeChild(logArea.lastChild);
-        }
-    }
-
-    function setStatus(text, type = '') {
-        statusDiv.innerText = text;
-        statusDiv.className = type;
-    }
-
-    async function sendToSheet(rawText, className, date) {
-        const sheetName = getSheetName(className);
-        const payload = {
-            rawText: rawText,
-            className: className,
-            sheetName: sheetName,
-            date: date || '',
-            token: SECRET_TOKEN
-        };
-        const response = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload),
-            headers: { 'Content-Type': 'application/json' }
-        });
-        return await response.text();
-    }
-
-    // ============================================================
-    // 5. ОБРОБКА РОЗПІЗНАВАЧА
-    // ============================================================
-    recognition.onstart = () => {
-        isListening = true;
-        startBtn.className = 'btn-mic ready';
-        startBtn.innerHTML = '⏹️';
-        setStatus('🎤 Слухаю... говоріть чітко', '');
-    };
-
-    recognition.onend = () => {
-        isListening = false;
-        startBtn.className = 'btn-mic';
-        startBtn.innerHTML = '🎙️';
-        if (!isProcessing) setStatus('Очікування...');
-    };
-
-    recognition.onerror = (event) => {
-        console.warn('Помилка розпізнавання:', event.error);
-        if (event.error === 'not-allowed') {
-            setStatus('❌ Доступ до мікрофона заборонено', 'error');
-        } else if (event.error === 'no-speech') {
-            setStatus('⏳ Не вдалося розпізнати мову, спробуйте ще', 'error');
-            addLogEntry('⚠️ Не розпізнано мову', false);
-        } else {
-            setStatus(`❌ Помилка: ${event.error}`, 'error');
-        }
-        isListening = false;
-        startBtn.className = 'btn-mic';
-        startBtn.innerHTML = '🎙️';
-        isProcessing = false;
-    };
-
-    recognition.onresult = async (event) => {
-        if (isProcessing) return;
-        isProcessing = true;
-        const rawText = event.results[0][0].transcript.trim();
-        const className = classSelect.value;
-        const date = dateInput.value;
-        setStatus('⏳ Надсилання до сервера...');
-        addLogEntry(`📝 "${rawText}" → ${className}`);
-        try {
-            const result = await sendToSheet(rawText, className, date);
-            setStatus(`✅ ${result}`, 'success');
-            addLogEntry(`✅ ${result}`, true);
-        } catch (err) {
-            const msg = `Помилка зв'язку: ${err.message}`;
-            setStatus(`❌ ${msg}`, 'error');
-            addLogEntry(`❌ ${msg}`, false);
-        } finally {
-            isProcessing = false;
-            if (!isListening) {
-                startBtn.className = 'btn-mic';
-                startBtn.innerHTML = '🎙️';
-            }
-        }
-    };
-
-    // ============================================================
-    // 6. КНОПКА ЗАПУСКУ
-    // ============================================================
-    startBtn.addEventListener('click', () => {
-        if (isProcessing) {
-            setStatus('⏳ Зачекайте, триває запис...');
-            return;
-        }
-        if (isListening) {
-            recognition.stop();
-            return;
-        }
-        try {
-            recognition.start();
-        } catch (e) {
-            try {
+        startBtn.addEventListener('click', () => {
+            if (!isActive) {
+                isActive = true;
+                statusDiv.classList.remove('error-text', 'success-text');
+                setVisualState("listening");
+                safeStart();
+            } else {
+                isActive = false;
+                setVisualState("stopped");
                 recognition.stop();
-                setTimeout(() => recognition.start(), 300);
-            } catch (_) {
-                setStatus('❌ Не вдалося запустити мікрофон', 'error');
+            }
+        });
+
+        function setVisualState(state) {
+            if (state === "listening") {
+                startBtn.className = "btn-mic ready";
+                startBtn.innerHTML = "🛑";
+                statusDiv.innerText = "Слухаю вас, диктуйте...";
+            } else if (state === "waiting") {
+                startBtn.className = "btn-mic wait";
+                startBtn.innerHTML = "🧠";
+                statusDiv.innerText = "ШІ аналізує та шукає учня...";
+            } else {
+                startBtn.className = "btn-mic";
+                startBtn.innerHTML = "🎙️";
+                statusDiv.innerText = "Журнал зупинено.";
             }
         }
-    });
 
-    // ============================================================
-    // 7. ПІДКАЗКА ПРИ ЗМІНІ КЛАСУ
-    // ============================================================
-    classSelect.addEventListener('change', () => {
-        const cls = classSelect.value;
-        const sheet = getSheetName(cls);
-        addLogEntry(`📚 Обрано клас ${cls} (аркуш ${sheet})`, true);
-        setStatus(`Готово: ${cls}`);
-    });
+        function safeStart() {
+            if (isActive && !isSpeaking) {
+                try { 
+                    recognition.start(); 
+                    setVisualState("listening");
+                } catch(e) {}
+            }
+        }
 
-    addLogEntry('📌 Застосунок готовий. Натисніть 🎙️', true);
+        recognition.onend = () => {
+            if (isActive && !isSpeaking) {
+                setTimeout(safeStart, 500); 
+            }
+        };
+
+        recognition.onresult = (event) => {
+            const text = event.results[0][0].transcript;
+            resultDiv.innerText = `Почуто: "${text}"`;
+
+            const selectedDate = dateInput.value;
+            const selectedClass = classSelect.value;
+
+            isSpeaking = true;
+            setVisualState("waiting");
+            recognition.stop();
+            
+            sendToGoogleSheet(text, selectedDate, selectedClass);
+        };
+
+        recognition.onerror = (e) => {
+            if (e.error === 'no-speech') safeStart();
+        };
+    }
+
+    function sendToGoogleSheet(rawText, date, className) {
+        statusDiv.innerText = `Надсилаю дані в таблицю...`;
+        
+        const formData = new FormData();
+        formData.append('rawText', rawText);
+        formData.append('date', date);
+        formData.append('className', className);
+        formData.append('token', SECRET_TOKEN);
+
+        fetch(WEB_APP_URL, {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.text())
+        .then(responseText => {
+            statusDiv.classList.remove('error-text', 'success-text');
+            
+            if (responseText.includes("Помилка")) {
+                statusDiv.classList.add('error-text');
+                statusDiv.innerText = responseText;
+                speak("Не розпізнано.", () => {
+                    isSpeaking = false;
+                    setTimeout(safeStart, 1000);
+                });
+            } else {
+                statusDiv.classList.add('success-text');
+                statusDiv.innerText = responseText;
+                resultDiv.innerText = `🎉 Оцінку виставлено!`;
+                
+                speak("Записано.", () => {
+                    isSpeaking = false;
+                    setTimeout(safeStart, 1000); 
+                });
+            }
+        })
+        .catch(error => {
+            statusDiv.classList.add('error-text');
+            statusDiv.innerText = "Помилка зв'язку з сервером.";
+            speak("Помилка.", () => {
+                isSpeaking = false;
+                setTimeout(safeStart, 1000);
+            });
+        });
+    }
+
+    function speak(message, callback) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(message);
+            utterance.lang = 'uk-UA';
+            if (callback) utterance.onend = callback; 
+            window.speechSynthesis.speak(utterance);
+        } else if (callback) {
+            callback();
+        }
+    }
 </script>
 </body>
 </html>
