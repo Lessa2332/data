@@ -249,7 +249,7 @@
     // 1. НАЛАШТУВАННЯ
     // ============================================================
     // ЄДИНА URL-АДРЕСА ДЛЯ ВСІХ ЗАПИТІВ (GET і POST)
-    const WEB_APP_URL = "https://script.google.com/macros/library/d/1KBel-MirZwSi7saoiekVKI8H3nFmIf7jtToDXwceG7MfaMYhGYIkcuEv/10";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxVvvZ7mlJGIEe7cL8LN6_9CQ-YbvibPmXmW5V2KffPPLsJXRyVrjCm4-vrPlueYG6d2Q/exec";
     const SECRET_TOKEN = "Вчитель2026_СекретнийПароль!#";
 
     // ============================================================
@@ -349,7 +349,7 @@
     }
 
     // ============================================================
-    // 4. ВІДПРАВЛЕННЯ ДАНИХ (JSON)
+    // 4. ВІДПРАВЛЕННЯ ДАНИХ (FormData – без CORS preflight)
     // ============================================================
     function getSheetName(className) {
         return className.startsWith('5') ? 'Grade_5' : 'Grade_7';
@@ -359,20 +359,16 @@
         const sheetName = getSheetName(className);
         statusDiv.innerText = `📤 Надсилання до аркуша ${sheetName}...`;
         
-        const payload = {
-            rawText: rawText,
-            date: date,
-            className: className,
-            sheetName: sheetName,
-            token: SECRET_TOKEN
-        };
+        const formData = new FormData();
+        formData.append('rawText', rawText);
+        formData.append('date', date);
+        formData.append('className', className);
+        formData.append('sheetName', sheetName);
+        formData.append('token', SECRET_TOKEN);
 
         fetch(WEB_APP_URL, {
             method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
+            body: formData  // без заголовка Content-Type – браузер сам встановить multipart/form-data
         })
         .then(response => response.text())
         .then(responseText => {
