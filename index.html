@@ -32,14 +32,18 @@
     .subtitle {
       text-align: center;
       color: #666;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
       font-size: 14px;
+    }
+    .form-group {
+      margin-bottom: 15px;
     }
     label {
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       color: #333;
       font-weight: 600;
+      font-size: 14px;
     }
     select {
       width: 100%;
@@ -47,7 +51,6 @@
       border: 2px solid #e0e0e0;
       border-radius: 10px;
       font-size: 16px;
-      margin-bottom: 20px;
       background: white;
       cursor: pointer;
     }
@@ -60,7 +63,7 @@
       color: white;
       font-size: 48px;
       cursor: pointer;
-      margin: 30px auto;
+      margin: 25px auto;
       display: block;
       transition: transform 0.2s;
       box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
@@ -78,74 +81,117 @@
     .status {
       text-align: center;
       color: #666;
-      margin: 20px 0;
+      margin: 15px 0;
       font-size: 14px;
     }
     .result {
       background: #f5f5f5;
       padding: 15px;
       border-radius: 10px;
-      margin-top: 20px;
+      margin-top: 15px;
       white-space: pre-wrap;
       font-size: 14px;
       line-height: 1.6;
     }
     .hint {
-      background: #fff3cd;
-      border-left: 4px solid #ffc107;
-      padding: 12px;
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 10px 12px;
       border-radius: 5px;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       font-size: 13px;
-      color: #856404;
+      color: #1565c0;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>🎙️ Голосовий Журнал</h1>
-    <p class="subtitle">Інтелектуальна система оцінювання</p>
+    <p class="subtitle">Оберіть клас і тему, диктуйте прізвище + бал</p>
 
     <div class="hint">
-      💡 <strong>Приклад:</strong> "Африка географічне положення Ашихмін перша група 11 балів"<br>
-      <small>Тему можна диктувати без підкреслення — скрипт знайде сам</small>
+      💡 <strong>Приклад:</strong> "Ашихмін 11 балів"
     </div>
 
-    <label for="classSelect">Клас:</label>
-    <select id="classSelect">
-      <optgroup label="5-ті класи">
-        <option value="5-А">5-А клас</option>
-        <option value="5-Б">5-Б клас</option>
-        <option value="5-В">5-В клас</option>
-        <option value="5-Г">5-Г клас</option>
-        <option value="5-Д">5-Д клас</option>
-      </optgroup>
-      <optgroup label="7-мі класи">
-        <option value="7-А">7-А клас</option>
-        <option value="7-Б">7-Б клас</option>
-        <option value="7-В">7-В клас</option>
-        <option value="7-Г">7-Г клас</option>
-        <option value="7-Д">7-Д клас</option>
-      </optgroup>
-    </select>
+    <div class="form-group">
+      <label for="classSelect">Клас:</label>
+      <select id="classSelect">
+        <optgroup label="5-ті класи">
+          <option value="Grade_5">5-А</option>
+          <option value="Grade_5">5-Б</option>
+          <option value="Grade_5">5-В</option>
+          <option value="Grade_5">5-Г</option>
+          <option value="Grade_5">5-Д</option>
+        </optgroup>
+        <optgroup label="7-мі класи">
+          <option value="Grade_7" selected>7-А</option>
+          <option value="Grade_7">7-Б</option>
+          <option value="Grade_7">7-В</option>
+          <option value="Grade_7">7-Г</option>
+          <option value="Grade_7">7-Д</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="topicSelect">Тема уроку:</label>
+      <select id="topicSelect">
+        <option value="">— Завантаження... —</option>
+      </select>
+    </div>
 
     <button id="micButton" class="mic-button">🎤</button>
-    <p id="status" class="status">Натисніть кнопку та диктуйте</p>
+    <p id="status" class="status">Натисніть кнопку та диктуйте прізвище і бал</p>
     <div id="result" class="result" style="display: none;"></div>
   </div>
 
   <script>
-    // ⚠️ ВАЖЛИВО: Встав сюди НОВИЙ URL після розгортання скрипту!
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwaLIfxaStKrve4Q2RjWklQpwzfKiTff0wN-f4_vqJ9TE8Fp5Pv846ZZeS70hzuWfIlzg/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzbMwW0SJz72IGXAlV-xsft7whu5_0hSneoe-bAbwfbatcMWtNrO635y04V80mv6Wj0Bw/exec";
     const TOKEN = "Вчитель2026_СекретнийПароль!#";
+    const MONITOR_KEY = "MyGeoTrackSecret2026";
 
+    const classSelect = document.getElementById('classSelect');
+    const topicSelect = document.getElementById('topicSelect');
     const micButton = document.getElementById('micButton');
     const status = document.getElementById('status');
     const result = document.getElementById('result');
-    const classSelect = document.getElementById('classSelect');
 
     let recognition;
     let isRecording = false;
+
+    async function loadTopics() {
+      const sheetName = classSelect.value;
+      topicSelect.innerHTML = '<option value="">Завантаження...</option>';
+
+      try {
+        const url = `${SCRIPT_URL}?action=getTopics&key=${MONITOR_KEY}&sheet=${encodeURIComponent(sheetName)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.error) {
+          topicSelect.innerHTML = '<option value="">Помилка</option>';
+          return;
+        }
+
+        topicSelect.innerHTML = '<option value="">— Оберіть тему —</option>';
+        if (data.topics && data.topics.length > 0) {
+          data.topics.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.value;
+            opt.textContent = t.display;
+            topicSelect.appendChild(opt);
+          });
+        } else {
+          topicSelect.innerHTML = '<option value="">Немає тем</option>';
+        }
+      } catch(err) {
+        topicSelect.innerHTML = '<option value="">Помилка завантаження</option>';
+        console.error(err);
+      }
+    }
+
+    classSelect.addEventListener('change', loadTopics);
+    loadTopics();
 
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -184,6 +230,11 @@
     micButton.addEventListener('click', () => {
       if (!recognition) return;
       
+      if (!topicSelect.value) {
+        alert('Будь ласка, оберіть тему уроку!');
+        return;
+      }
+      
       if (isRecording) {
         recognition.stop();
       } else {
@@ -202,6 +253,7 @@
           body: JSON.stringify({
             token: TOKEN,
             className: classSelect.value,
+            topic: topicSelect.value,
             rawText: text
           })
         });
