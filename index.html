@@ -42,32 +42,25 @@
     </style>
 </head>
 <body>
-
 <div class="app-card">
     <h2>🎙️ Голосовий журнал</h2>
     <div class="subtitle">GeoTrack · запис оцінок через голос</div>
-
     <div class="hint">
         <strong>Формат:</strong> <i>Прізвище, група, тема, оцінка.</i><br>
         📌 <i>«Петренко, друга група, Африка географічне положення, 11 балів»</i>
     </div>
-
     <div class="controls-grid">
         <div class="form-group">
             <label for="class-select">Клас</label>
             <select id="class-select" class="form-input">
                 <optgroup label="5-ті класи">
-                    <option value="5-А">5-А</option>
-                    <option value="5-Б">5-Б</option>
-                    <option value="5-В">5-В</option>
-                    <option value="5-Г">5-Г</option>
+                    <option value="5-А">5-А</option><option value="5-Б">5-Б</option>
+                    <option value="5-В">5-В</option><option value="5-Г">5-Г</option>
                     <option value="5-Д">5-Д</option>
                 </optgroup>
                 <optgroup label="7-мі класи">
-                    <option value="7-А" selected>7-А</option>
-                    <option value="7-Б">7-Б</option>
-                    <option value="7-В">7-В</option>
-                    <option value="7-Г">7-Г</option>
+                    <option value="7-А" selected>7-А</option><option value="7-Б">7-Б</option>
+                    <option value="7-В">7-В</option><option value="7-Г">7-Г</option>
                     <option value="7-Д">7-Д</option>
                 </optgroup>
             </select>
@@ -77,13 +70,10 @@
             <input type="date" id="lesson-date" class="form-input">
         </div>
     </div>
-
     <div class="mic-wrapper">
         <button id="start-btn" class="btn-mic">🎙️</button>
     </div>
-
     <div id="status">Натисніть мікрофон, щоб почати</div>
-
     <div class="log-area" id="logArea">
         <div class="entry" style="color: #9ca3af;">Історія записів з'явиться тут…</div>
     </div>
@@ -106,9 +96,7 @@
     const dateInput = document.getElementById('lesson-date');
     const logArea = document.getElementById('logArea');
 
-    // Встановлюємо сьогоднішню дату за замовчуванням (але вона не обов'язкова)
     dateInput.value = new Date().toISOString().split('T')[0];
-
     let isListening = false;
     let isProcessing = false;
 
@@ -121,7 +109,6 @@
         statusDiv.className = 'error';
         startBtn.disabled = true;
     }
-
     const recognition = new SpeechRecognition();
     recognition.lang = 'uk-UA';
     recognition.continuous = false;
@@ -153,7 +140,6 @@
 
     async function sendToSheet(rawText, className, date) {
         const sheetName = getSheetName(className);
-
         const payload = {
             rawText: rawText,
             className: className,
@@ -161,15 +147,12 @@
             date: date || '',
             token: SECRET_TOKEN
         };
-
         const response = await fetch(WEB_APP_URL, {
             method: 'POST',
             body: JSON.stringify(payload),
             headers: { 'Content-Type': 'application/json' }
         });
-
-        const result = await response.text();
-        return result;
+        return await response.text();
     }
 
     // ============================================================
@@ -186,9 +169,7 @@
         isListening = false;
         startBtn.className = 'btn-mic';
         startBtn.innerHTML = '🎙️';
-        if (!isProcessing) {
-            setStatus('Очікування...');
-        }
+        if (!isProcessing) setStatus('Очікування...');
     };
 
     recognition.onerror = (event) => {
@@ -210,14 +191,11 @@
     recognition.onresult = async (event) => {
         if (isProcessing) return;
         isProcessing = true;
-
         const rawText = event.results[0][0].transcript.trim();
         const className = classSelect.value;
         const date = dateInput.value;
-
         setStatus('⏳ Надсилання до сервера...');
         addLogEntry(`📝 "${rawText}" → ${className}`);
-
         try {
             const result = await sendToSheet(rawText, className, date);
             setStatus(`✅ ${result}`, 'success');
@@ -250,7 +228,6 @@
         try {
             recognition.start();
         } catch (e) {
-            // Якщо розпізнавання вже запущено, зупиняємо і запускаємо знову
             try {
                 recognition.stop();
                 setTimeout(() => recognition.start(), 300);
@@ -270,7 +247,6 @@
         setStatus(`Готово: ${cls}`);
     });
 
-    // Початкове повідомлення
     addLogEntry('📌 Застосунок готовий. Натисніть 🎙️', true);
 </script>
 </body>
