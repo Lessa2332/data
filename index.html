@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Голосовий журнал</title>
+    <title>Голосовий журнал GeoTrack</title>
     <style>
         :root {
             --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
@@ -200,27 +200,37 @@
 <body>
 
 <div class="app-card">
-    <h2>🎙️ Голосовий Журнал</h2>
-    <div class="subtitle">Інтелектуальна система оцінювання</div>
+    <h2>🎙️ Голосовий журнал GeoTrack</h2>
+    <div class="subtitle">Запис оцінок для 5-7 класів</div>
     
     <div class="hint">
-        🚀 <strong>Природна мова:</strong> Натисніть круглу кнопку та диктуйте. <br><i>"Бохонок перша група 11 балів."</i>
+        🚀 <strong>Природна мова:</strong> Натисніть кнопку та диктуйте.<br>
+        <i>"Волков, друга група, Африка географічне положення, 11 балів."</i>
     </div>
     
     <div class="controls-grid">
         <div class="form-group">
             <label for="class-select">Клас</label>
             <select id="class-select" class="form-input">
-                <option value="6-а">6-А клас</option>
-                <option value="6-б">6-Б клас</option>
-                <option value="6-в">6-В клас</option>
-                <option value="6-г">6-Г клас</option>
-                <option value="6-д">6-Д клас</option>
+                <optgroup label="5-ті класи">
+                    <option value="5-А">5-А</option>
+                    <option value="5-Б">5-Б</option>
+                    <option value="5-В">5-В</option>
+                    <option value="5-Г">5-Г</option>
+                    <option value="5-Д">5-Д</option>
+                </optgroup>
+                <optgroup label="7-мі класи">
+                    <option value="7-А">7-А</option>
+                    <option value="7-Б">7-Б</option>
+                    <option value="7-В">7-В</option>
+                    <option value="7-Г">7-Г</option>
+                    <option value="7-Д">7-Д</option>
+                </optgroup>
             </select>
         </div>
         
         <div class="form-group">
-            <label for="lesson-date">Дата</label>
+            <label for="lesson-date">Дата (необов'язково)</label>
             <input type="date" id="lesson-date" class="form-input">
         </div>
     </div>
@@ -235,9 +245,16 @@
 </div>
 
 <script>
+    // ============================================================
+    // 1. НАЛАШТУВАННЯ
+    // ============================================================
+    // ЄДИНА URL-АДРЕСА ДЛЯ ВСІХ ЗАПИТІВ (GET і POST)
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyKCsLY4CzJac9PFMEmia7UKIL01t9yC_Jvk4_mSnqLkrcT1wQQJio9cebNZx9nXPG5Wg/exec";
     const SECRET_TOKEN = "Вчитель2026_СекретнийПароль!#";
 
+    // ============================================================
+    // 2. DOM-ЕЛЕМЕНТИ
+    // ============================================================
     const startBtn = document.getElementById('start-btn');
     const statusDiv = document.getElementById('status');
     const resultDiv = document.getElementById('result');
@@ -249,10 +266,13 @@
     let isActive = false;     
     let isSpeaking = false;   
 
+    // ============================================================
+    // 3. ГОЛОСОВЕ РОЗПІЗНАВАННЯ
+    // ============================================================
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
-        statusDiv.innerText = "Браузер не підтримує розпізнавання мови.";
+        statusDiv.innerText = "❌ Браузер не підтримує розпізнавання мови.";
         startBtn.disabled = true;
         startBtn.style.background = "#d1d5db";
     } else {
@@ -277,11 +297,11 @@
             if (state === "listening") {
                 startBtn.className = "btn-mic ready";
                 startBtn.innerHTML = "🛑";
-                statusDiv.innerText = "Слухаю вас, диктуйте...";
+                statusDiv.innerText = "🎤 Слухаю...";
             } else if (state === "waiting") {
                 startBtn.className = "btn-mic wait";
                 startBtn.innerHTML = "🧠";
-                statusDiv.innerText = "ШІ аналізує та шукає учня...";
+                statusDiv.innerText = "⏳ Аналіз та запис...";
             } else {
                 startBtn.className = "btn-mic";
                 startBtn.innerHTML = "🎙️";
@@ -306,7 +326,7 @@
 
         recognition.onresult = (event) => {
             const text = event.results[0][0].transcript;
-            resultDiv.innerText = `Почуто: "${text}"`;
+            resultDiv.innerText = `📝 "${text}"`;
 
             const selectedDate = dateInput.value;
             const selectedClass = classSelect.value;
@@ -320,54 +340,69 @@
 
         recognition.onerror = (e) => {
             if (e.error === 'no-speech') safeStart();
+            else {
+                setVisualState("stopped");
+                isActive = false;
+                statusDiv.innerText = "❌ Помилка: " + e.error;
+            }
         };
     }
 
+    // ============================================================
+    // 4. ВІДПРАВЛЕННЯ ДАНИХ (JSON)
+    // ============================================================
+    function getSheetName(className) {
+        return className.startsWith('5') ? 'Grade_5' : 'Grade_7';
+    }
+
     function sendToGoogleSheet(rawText, date, className) {
-        statusDiv.innerText = `Надсилаю дані в таблицю...`;
+        const sheetName = getSheetName(className);
+        statusDiv.innerText = `📤 Надсилання до аркуша ${sheetName}...`;
         
-        const formData = new FormData();
-        formData.append('rawText', rawText);
-        formData.append('date', date);
-        formData.append('className', className);
-        formData.append('token', SECRET_TOKEN);
+        const payload = {
+            rawText: rawText,
+            date: date,
+            className: className,
+            sheetName: sheetName,
+            token: SECRET_TOKEN
+        };
 
         fetch(WEB_APP_URL, {
             method: "POST",
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
         })
         .then(response => response.text())
         .then(responseText => {
             statusDiv.classList.remove('error-text', 'success-text');
             
-            if (responseText.includes("Помилка")) {
+            if (responseText.includes("Помилка") || responseText.includes("❌")) {
                 statusDiv.classList.add('error-text');
-                statusDiv.innerText = responseText;
-                speak("Не розпізнано.", () => {
-                    isSpeaking = false;
-                    setTimeout(safeStart, 1000);
-                });
+                statusDiv.innerText = "❌ " + responseText;
+                speak("Помилка запису.");
             } else {
                 statusDiv.classList.add('success-text');
-                statusDiv.innerText = responseText;
+                statusDiv.innerText = "✅ " + responseText;
                 resultDiv.innerText = `🎉 Оцінку виставлено!`;
-                
-                speak("Записано.", () => {
-                    isSpeaking = false;
-                    setTimeout(safeStart, 1000); 
-                });
+                speak("Записано.");
             }
+            isSpeaking = false;
+            setTimeout(safeStart, 1000);
         })
         .catch(error => {
             statusDiv.classList.add('error-text');
-            statusDiv.innerText = "Помилка зв'язку з сервером.";
-            speak("Помилка.", () => {
-                isSpeaking = false;
-                setTimeout(safeStart, 1000);
-            });
+            statusDiv.innerText = "❌ Помилка зв'язку з сервером.";
+            speak("Помилка зв'язку.");
+            isSpeaking = false;
+            setTimeout(safeStart, 1000);
         });
     }
 
+    // ============================================================
+    // 5. ГОЛОСОВЕ ОЗВУЧЕННЯ (опціонально)
+    // ============================================================
     function speak(message, callback) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel(); 
@@ -379,6 +414,9 @@
             callback();
         }
     }
+
+    // Початкове повідомлення
+    statusDiv.innerText = "🎙️ Натисніть мікрофон, щоб почати";
 </script>
 </body>
 </html>
