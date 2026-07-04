@@ -107,14 +107,26 @@
     <p class="subtitle">Інтелектуальна система оцінювання</p>
 
     <div class="hint">
-      💡 <strong>Приклад:</strong> "Африка географічне положення Бохонок перша група 11 балів"
+      💡 <strong>Приклад:</strong> "Африка географічне положення Ашихмін перша група 11 балів"<br>
+      <small>Тему можна диктувати без підкреслення — скрипт знайде сам</small>
     </div>
 
     <label for="classSelect">Клас:</label>
     <select id="classSelect">
-      <option value="5-А">5-А клас</option>
-      <option value="7-А">7-А клас</option>
-      <option value="7-Б">7-Б клас</option>
+      <optgroup label="5-ті класи">
+        <option value="5-А">5-А клас</option>
+        <option value="5-Б">5-Б клас</option>
+        <option value="5-В">5-В клас</option>
+        <option value="5-Г">5-Г клас</option>
+        <option value="5-Д">5-Д клас</option>
+      </optgroup>
+      <optgroup label="7-мі класи">
+        <option value="7-А">7-А клас</option>
+        <option value="7-Б">7-Б клас</option>
+        <option value="7-В">7-В клас</option>
+        <option value="7-Г">7-Г клас</option>
+        <option value="7-Д">7-Д клас</option>
+      </optgroup>
     </select>
 
     <button id="micButton" class="mic-button">🎤</button>
@@ -123,6 +135,7 @@
   </div>
 
   <script>
+    // ⚠️ ВАЖЛИВО: Встав сюди НОВИЙ URL після розгортання скрипту!
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwaLIfxaStKrve4Q2RjWklQpwzfKiTff0wN-f4_vqJ9TE8Fp5Pv846ZZeS70hzuWfIlzg/exec";
     const TOKEN = "Вчитель2026_СекретнийПароль!#";
 
